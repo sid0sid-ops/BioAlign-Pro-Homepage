@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioAlign-Pro | Bioinformatics Suite by Siddharth Tripathi</title>
+    <meta name="description"
+        content="BioAlign-Pro Home Page. A suite of advanced Bioinformatics tools engineered by Siddharth Tripathi.">
+    <meta name="author" content="Siddharth Tripathi">
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS (CDN with production plugins) -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
+    <script>
+        // Theme Initialization: Check local storage or system preference
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Roboto', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        background: 'var(--bg)',
+                        surface: 'var(--surface)',
+                        surfaceHover: 'var(--surface-hover)',
+                        primary: 'var(--primary)',
+                        destructive: 'var(--destructive)',
+                        muted: 'var(--muted)',
+                        border: 'var(--border)',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out both',
+                        'slide-up': 'slideUp 0.4s ease-out both',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Styles (reused from PA tool) -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+
+    <style>
+        /* Specific Home Page Styles */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dark .glass-card {
+            background: rgba(10, 10, 10, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #threejs-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -10;
+            pointer-events: none;
+        }
+
+        /* Fade gradient overlay to make text readable over 3D background */
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, transparent 0%, var(--bg) 90%);
+            z-index: -5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background text-gray-900 dark:text-gray-100 font-sans antialiased overflow-x-hidden min-h-screen flex flex-col relative">
+
+    <!-- 3D Scientific Background -->
+    <div id="threejs-canvas"></div>
+    <div class="bg-overlay"></div>
+
+    <!-- Navigation / Header -->
+    <nav
+        class="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-4 flex items-center justify-between shadow-sm relative">
+        <div class="flex items-center gap-3">
+            <div class="flex flex-col">
+                <span
+                    class="text-[9px] font-mono text-muted tracking-widest uppercase leading-none mb-1">BIOINFORMATICS</span>
+                <h1 class="text-xl font-bold tracking-tight leading-none pt-0 mt-0 text-black dark:text-white mb-1">
+                    BioAlign<span id="proText"
+                        class="text-black dark:text-white transition-colors duration-300">-Pro</span></h1>
+                <span class="text-[0.6rem] italic text-muted font-serif tracking-wide leading-relaxed animate-motto">
+                    "Where chemicals became so advanced that they started studying themselves."
+                </span>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 text-sm font-medium text-muted">
+            <button onclick="toggleTheme()"
+                class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus:outline-none bg-surface/50 backdrop-blur"
+                title="Toggle Light/Dark Theme">
+                <i id="themeIcon" class="fa-solid fa-moon text-black dark:text-white"></i>
+            </button>
+            <div class="hidden md:flex items-center gap-4">
+                <a href="https://sid0sid-ops.github.io/BioAlign-Pro-Homepage/"
+                    class="flex items-center gap-2 px-3 py-1 hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white rounded-full transition-colors focus:outline-none"
+                    title="Home">
+                    <i class="fa-solid fa-house"></i> Home
+                </a>
+                <!-- GIVE YOUR CONTACT PAGE GIT HUB LINK!! BEFORE UPLODING -->
+                <a href="https://sid0sid-ops.github.io/BioAlign-Pro-Contact/"
+                    class="px-3 py-1 bg-surface hover:bg-black/5 dark:hover:bg-white/10 text-black dark:text-white rounded-full transition-colors border border-border">Contact</a>
+            </div>
+
+            <!-- Mobile Hamburger Menu Toggle -->
+            <button id="mobileMenuBtn" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')"
+                class="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors focus:outline-none text-black dark:text-white bg-surface/50 backdrop-blur">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobileMenu"
+                class="hidden absolute top-full mt-2 right-4 w-48 bg-surface/95 backdrop-blur-xl border border-border rounded-xl shadow-xl flex flex-col py-2 z-50 animate-slide-up">
+                <a href="https://sid0sid-ops.github.io/BioAlign-Pro-Homepage/"
+                    class="w-full text-left px-4 py-3 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-3 font-semibold bg-black/5 dark:bg-white/10">
+                    <i class="fa-solid fa-house w-4"></i> Home
+                </a>
+                <div class="h-px bg-border w-full my-1"></div>
+                <!-- GIVE YOUR CONTACT PAGE GIT HUB LINK!! BEFORE UPLODING -->
+                <a href="https://sid0sid-ops.github.io/BioAlign-Pro-Contact/"
+                    class="w-full text-left px-4 py-3 text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-3">
+                    <i class="fa-solid fa-envelope w-4"></i> Contact
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main
+        class="flex-grow w-full max-w-6xl mx-auto px-4 py-16 flex flex-col gap-16 animate-fade-in relative z-10 items-center">
+
+        <!-- Hero Section -->
+        <section class="flex flex-col items-center justify-center pt-8 pb-4 gap-6 text-center animate-slide-up w-full">
+            <div
+                class="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20 mb-2">
+                <span class="relative flex h-2 w-2">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                Bioinformatics Engine
+            </div>
+
+            <h2
+                class="text-5xl md:text-7xl font-extrabold tracking-tight text-black dark:text-white drop-shadow-sm inline-block">
+                Decode The <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">Genome</span>
+            </h2>
+            <p class="text-lg md:text-xl text-muted max-w-2xl font-light">
+                A robust, web-based, hardware-accelerated bioinformatics platform designed for high-performance sequence
+                analysis and advanced algorithmic research.
+            </p>
+        </section>
+
+        <!-- Tools Grid Section -->
+        <section class="w-full max-w-5xl flex flex-col gap-8 animate-slide-up" style="animation-delay: 0.1s;">
+
+            <div class="flex items-center gap-4 mb-2">
+                <div class="h-px bg-border flex-grow"></div>
+                <h3 class="text-sm font-bold tracking-widest uppercase text-muted">BIOINFORMATICS TOOLS</h3>
+                <div class="h-px bg-border flex-grow"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+
+                <!-- Pairwise Alignment Tool Card -->
+                <div
+                    class="group relative glass-card p-8 rounded-2xl hover:-translate-y-2 transition-all duration-300 text-left hover:shadow-[0_20px_40px_rgba(62,166,255,0.15)] focus-within:ring-2 focus-within:ring-primary overflow-hidden border border-border">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <div
+                        class="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
+                        <i class="fa-solid fa-arrow-right text-primary"></i>
+                    </div>
+
+                    <div class="relative z-10 flex flex-col h-full">
+                        <div
+                            class="w-14 h-14 rounded-xl bg-black/5 dark:bg-primary/10 flex items-center justify-center text-primary mb-6 shadow-inner ring-1 ring-black/5 dark:ring-white/10">
+                            <i class="fa-solid fa-dna text-2xl"></i>
+                        </div>
+                        <h3
+                            class="text-2xl font-bold text-black dark:text-white mb-3 group-hover:text-[#3ea6ff] transition-all tracking-tight group-hover:drop-shadow-[0_0_8px_rgba(62,166,255,0.8)]">
+                            Pairwise Sequence Alignment
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-7 mb-6 flex-grow text-justify">
+                            Perform global (Needleman–Wunsch) and local (Smith–Waterman) alignments powered by dynamic
+                            programming with interactive matrix visualization and optimized computational efficiency.
+                        </p>
+
+                        <div
+                            class="flex flex-wrap items-center justify-between mt-auto pt-4 border-t border-border/50 gap-y-4 gap-x-2">
+                            <span
+                                class="text-xs font-mono text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1.5 rounded-md flex items-center gap-1.5 whitespace-nowrap">
+                                <i class="fa-solid fa-code-commit"></i> Stable Release
+                            </span>
+
+                            <div class="flex gap-2 w-full sm:w-auto z-20">
+                                <a href="https://sid0sid-ops.github.io/BioAlign-Pro-Pairwise-Sequence-Alignment/"
+                                    class="w-full text-center text-sm font-semibold bg-white text-black px-5 py-2.5 rounded-lg hover:bg-gray-100 transition-colors shadow-sm border border-black/10 hover:border-black/20">
+                                    Launch App
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- add your git hub link for pairwise alignment!! -->
+                        <a href="https://sid0sid-ops.github.io/BioAlign-Pro-Pairwise-Sequence-Alignment/"
+                            class="absolute inset-0 z-0"><span class="sr-only">Go to Pairwise Sequence
+                                Alignment</span></a>
+                    </div>
+                </div>
+
+                <!-- Nucleotide Sequence Analyzer Tool Card -->
+                <div
+                    class="group relative glass-card p-8 rounded-2xl hover:-translate-y-2 transition-all duration-300 text-left hover:shadow-[0_20px_40px_rgba(245,158,11,0.15)] focus-within:ring-2 focus-within:ring-amber-500 overflow-hidden border border-border">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <div
+                        class="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
+                        <i class="fa-solid fa-arrow-right text-amber-500"></i>
+                    </div>
+
+                    <div class="relative z-10 flex flex-col h-full">
+                        <div
+                            class="w-14 h-14 rounded-xl bg-black/5 dark:bg-amber-500/10 flex items-center justify-center text-amber-500 mb-6 shadow-inner ring-1 ring-black/5 dark:ring-white/10">
+                            <i class="fa-solid fa-microscope text-2xl"></i>
+                        </div>
+                        <h3
+                            class="text-2xl font-bold text-black dark:text-white mb-3 group-hover:text-amber-500 transition-colors tracking-tight">
+                            Nucleotide Sequence Analyzer
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-7 mb-6 flex-grow text-justify">
+                            An integrated sequence analysis pipeline featuring DNA-to-RNA transcription, translation,
+                            open reading frame (ORF) detection, reverse complementation, and interactive 3D structural
+                            exploration.
+                        </p>
+
+                        <div
+                            class="flex flex-wrap items-center justify-between mt-auto pt-4 border-t border-border/50 gap-y-4 gap-x-2">
+                            <span
+                                class="text-xs font-mono text-amber-500 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-md flex items-center gap-1.5 whitespace-nowrap">
+                                <i class="fa-solid fa-circle-notch fa-spin"></i> In Development
+                            </span>
+
+                            <div class="flex gap-2 w-full sm:w-auto z-20">
+                                <a href="https://sid0sid-ops.github.io/BioAlign-Pro-Nucleotide-Sequence-Analyzer/"
+                                    class="w-full text-center text-sm font-semibold bg-white text-black px-5 py-2.5 rounded-lg hover:bg-gray-100 transition-colors shadow-sm border border-black/10 hover:border-black/20">
+                                    Launch App
+                                </a>
+                            </div>
+                        </div>
+
+                        <a href="https://sid0sid-ops.github.io/BioAlign-Pro-Nucleotide-Sequence-Analyzer/"
+                            class="absolute inset-0 z-0"><span class="sr-only">Go to Nucleotide Sequence
+                                Analyzer</span></a>
+                    </div>
+                </div>
+
+                <!-- Phylogenetic Tree Builder Tool Card -->
+                <div
+                    class="group relative glass-card p-8 rounded-2xl hover:-translate-y-2 transition-all duration-300 text-left hover:shadow-[0_20px_40px_rgba(168,85,247,0.15)] focus-within:ring-2 focus-within:ring-purple-500 overflow-hidden border border-border border-dashed">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    </div>
+                    <div
+                        class="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0">
+                        <i class="fa-solid fa-arrow-right text-purple-500"></i>
+                    </div>
+
+                    <div class="relative z-10 flex flex-col h-full">
+                        <div
+                            class="w-14 h-14 rounded-xl bg-black/5 dark:bg-purple-500/10 flex items-center justify-center text-purple-500 mb-6 shadow-inner ring-1 ring-black/5 dark:ring-white/10">
+                            <i class="fa-solid fa-code-branch text-2xl"></i>
+                        </div>
+                        <h3
+                            class="text-2xl font-bold text-black dark:text-white mb-3 group-hover:text-purple-500 transition-colors tracking-tight">
+                            Phylogenetic Tree Builder
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-7 mb-6 flex-grow text-justify">
+                            Generate and visualize evolutionary relationships using UPGMA and Neighbor-Joining
+                            algorithms with hierarchical clustering precision.
+                        </p>
+
+                        <div
+                            class="flex flex-wrap items-center justify-between mt-auto pt-4 border-t border-border/50 gap-y-4 gap-x-2">
+                            <span
+                                class="text-xs font-mono text-purple-500 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1.5 rounded-md flex items-center gap-1.5 whitespace-nowrap">
+                                <i class="fa-solid fa-spinner fa-pulse"></i> Planned Architecture
+                            </span>
+
+                            <div class="flex gap-2 w-full sm:w-auto z-20">
+                                <a href="https://sid0sid-ops.github.io/BioAlign-Pro-Phylogenetic-Tree-Builder/"
+                                    class="w-full text-center text-sm font-semibold bg-white text-black px-5 py-2.5 rounded-lg hover:bg-gray-100 transition-colors shadow-sm border border-black/10 hover:border-black/20">
+                                    Launch App
+                                </a>
+                            </div>
+                        </div>
+
+                        <a href="https://sid0sid-ops.github.io/BioAlign-Pro-Phylogenetic-Tree-Builder/"
+                            class="absolute inset-0 z-0"><span class="sr-only">Go to Phylogenetic Tree
+                                Builder</span></a>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
